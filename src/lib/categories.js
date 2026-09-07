@@ -281,6 +281,20 @@ export function categorieParSlug(slug) {
   return CATEGORIES.find((c) => c.slug === slug) ?? null
 }
 
+// Villes du Burundi proposées dans les pages catégorie.
+// Les 3 premières s'affichent d'office ; les suivantes apparaissent
+// avec le lien « Voir plus de villes ».
+export const VILLES_BURUNDI = [
+  { nom: 'Bujumbura', fond: 'linear-gradient(140deg, #8a3570, #4a1839)' },
+  { nom: 'Gitega', fond: 'linear-gradient(140deg, #d9973a, #a5641c)' },
+  { nom: 'Ngozi', fond: 'linear-gradient(140deg, #3c2a40, #241627)' },
+  { nom: 'Rumonge', fond: 'linear-gradient(140deg, #2f6b52, #17352a)' },
+  { nom: 'Muyinga', fond: 'linear-gradient(140deg, #7a4f8a, #402a47)' },
+  { nom: 'Ruyigi', fond: 'linear-gradient(140deg, #a5641c, #5c380f)' },
+  { nom: 'Kayanza', fond: 'linear-gradient(140deg, #33506b, #1a2836)' },
+  { nom: 'Bururi', fond: 'linear-gradient(140deg, #a2496f, #521f38)' },
+]
+
 // Catégories du blog (indépendantes des catégories de prestations ci-dessus)
 export const CATEGORIES_BLOG = [
   { id: 'conseils', nom: 'Conseils beauté', nom_en: 'Beauty tips' },

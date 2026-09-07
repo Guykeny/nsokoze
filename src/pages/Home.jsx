@@ -1,55 +1,59 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { supabase, photoUrl } from '../lib/supabase'
+import { categorieParSlug } from '../lib/categories.js'
 import { useLang } from '../lib/i18n.jsx'
 import SiteHeader from '../components/SiteHeader.jsx'
 import SiteFooter from '../components/SiteFooter.jsx'
 
-// Photos d'illustration en attendant les vraies photos des salons
-const PHOTOS_SALONS = [
-  'https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=800&q=60',
-  'https://images.unsplash.com/photo-1522337660859-02fbefca4702?auto=format&fit=crop&w=800&q=60',
-  'https://images.unsplash.com/photo-1585747860715-2ba37e788b70?auto=format&fit=crop&w=800&q=60',
-  'https://images.unsplash.com/photo-1604654894610-df63bc536371?auto=format&fit=crop&w=800&q=60',
-  'https://images.unsplash.com/photo-1600948836101-f9ffda59d250?auto=format&fit=crop&w=800&q=60',
+// Photo du hero : portrait éditorial, en attendant une vraie photo de salon burundais
+const PHOTO_HERO =
+  'https://images.unsplash.com/photo-1531123897727-8f129e1688ce?auto=format&fit=crop&w=2000&q=75'
+
+const CATEGORIES_HERO = [
+  {
+    id: 'coiffure',
+    photo: 'https://images.unsplash.com/photo-1519699047748-de8e457a634e?auto=format&fit=crop&w=700&q=70',
+  },
+  {
+    id: 'barbier',
+    photo: 'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&w=700&q=70',
+  },
+  {
+    id: 'manucure',
+    photo: 'https://images.unsplash.com/photo-1604654894610-df63bc536371?auto=format&fit=crop&w=700&q=70',
+  },
+  {
+    id: 'institut-de-beaute',
+    photo: 'https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?auto=format&fit=crop&w=700&q=70',
+  },
+  {
+    id: 'bien-etre',
+    photo: 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?auto=format&fit=crop&w=700&q=70',
+  },
 ]
 
-// Tuiles aux couleurs de la marque : pas de fausses photos de villes
-const VILLES = [
-  { nom: 'Bujumbura', fond: 'linear-gradient(140deg, #8a3570, #4a1839)' },
-  { nom: 'Gitega', fond: 'linear-gradient(140deg, #d9973a, #a5641c)' },
-  { nom: 'Ngozi', fond: 'linear-gradient(140deg, #3c2a40, #241627)' },
-]
+// Photo pour la section « histoire » : portrait, personne aux cheveux afro
+const PHOTO_HISTOIRE =
+  'https://images.unsplash.com/photo-1707741902060-f6caee412f26?auto=format&fit=crop&w=1400&q=75'
 
 const QUARTIERS = ['Rohero', 'Bwiza', 'Kamenge', 'Ngagara', 'Buyenzi', 'Kinindo']
 
-function initiales(name) {
-  return name
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((w) => w[0].toUpperCase())
-    .join('')
-}
-
 export default function Home() {
   const nav = useNavigate()
-  const { t } = useLang()
-  const [salons, setSalons] = useState([])
-  const [loading, setLoading] = useState(true)
+  const { t, lang } = useLang()
   const [q, setQ] = useState('')
   const [lieu, setLieu] = useState('')
+  const [indexCat, setIndexCat] = useState(0)
 
-  useEffect(() => {
-    supabase
-      .from('salons')
-      .select('*')
-      .order('created_at')
-      .then(({ data }) => {
-        setSalons(data ?? [])
-        setLoading(false)
-      })
-  }, [])
+  const catActive = CATEGORIES_HERO[indexCat]
+  const infoCat = categorieParSlug(catActive.id)
+
+  function catPrecedente() {
+    setIndexCat((i) => (i - 1 + CATEGORIES_HERO.length) % CATEGORIES_HERO.length)
+  }
+  function catSuivante() {
+    setIndexCat((i) => (i + 1) % CATEGORIES_HERO.length)
+  }
 
   function rechercher(e) {
     e?.preventDefault()
@@ -63,7 +67,10 @@ export default function Home() {
     <>
       <SiteHeader />
 
-      <section className="hero-planity">
+      <section
+        className="hero-planity hero-photo"
+        style={{ backgroundImage: `url(${PHOTO_HERO})` }}
+      >
         <div className="hero-contenu">
           <p className="kaze">{t('home_kaze')}</p>
           <h1>{t('home_titre')}</h1>
@@ -102,85 +109,68 @@ export default function Home() {
         </div>
       </section>
 
-      <main className="conteneur">
-        <section className="section">
-          <h2 className="section-titre">{t('home_villes_titre')}</h2>
-          <p className="section-sous">{t('home_villes_sous')}</p>
-          <div className="grille-salons">
-            {VILLES.map((v) => (
-              <Link
-                key={v.nom}
-                to={`/recherche?ou=${encodeURIComponent(v.nom)}`}
-                className="carte-salon"
-              >
-                <div className="tuile-ville" style={{ background: v.fond }}>
-                  <span className="lettre" aria-hidden="true">{v.nom[0]}</span>
-                </div>
-                <div className="infos-salon">
-                  <div className="meta">{t('home_decouvrez')}</div>
-                  <div className="nom">{t('home_salons_a')} {v.nom}</div>
-                </div>
-              </Link>
-            ))}
+      <div className="carrousel-pro-section">
+        <div className="carrousel-pro">
+          <div className="carrousel-pro-photo">
+            <img
+              src={CATEGORIES_HERO[(indexCat - 1 + CATEGORIES_HERO.length) % CATEGORIES_HERO.length].photo}
+              alt=""
+              loading="lazy"
+            />
           </div>
-        </section>
-
-        <section className="section">
-          <h2 className="section-titre">{t('home_dispo_titre')}</h2>
-          <p className="section-sous">{t('home_dispo_sous')}</p>
-
-          {loading && (
-            <div className="grille-salons">
-              <div className="squelette carte-fantome" />
-              <div className="squelette carte-fantome" />
-              <div className="squelette carte-fantome" />
-              <div className="squelette carte-fantome" />
+          <div className="carrousel-pro-photo carrousel-pro-photo-active">
+            <img src={catActive.photo} alt="" loading="lazy" />
+          </div>
+          <div className="carrousel-pro-texte">
+            <h2 className="section-titre">{t('home_pro_titre')}</h2>
+            <p className="carrousel-pro-nom">
+              {lang === 'en' && infoCat?.nom_en ? infoCat.nom_en : infoCat?.nom}
+            </p>
+            <p className="section-sous" style={{ margin: '0 0 16px' }}>
+              {t(`home_pro_txt_${catActive.id.replace(/-/g, '_')}`)}
+            </p>
+            <Link to={`/c/${catActive.id}`} className="carrousel-pro-lien">
+              {t('home_pro_lien')}
+            </Link>
+            <div className="carrousel-pro-nav">
+              <button
+                className="carrousel-pro-fleche"
+                aria-label="Catégorie précédente"
+                onClick={catPrecedente}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 6-6 6 6 6" /></svg>
+              </button>
+              <button
+                className="carrousel-pro-fleche"
+                aria-label="Catégorie suivante"
+                onClick={catSuivante}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 6 6 6-6 6" /></svg>
+              </button>
             </div>
-          )}
+          </div>
+          <div className="carrousel-pro-photo carrousel-pro-photo-deborde">
+            <img
+              src={CATEGORIES_HERO[(indexCat + 1) % CATEGORIES_HERO.length].photo}
+              alt=""
+              loading="lazy"
+            />
+          </div>
+        </div>
+      </div>
 
-          {!loading && salons.length === 0 && (
-            <div className="vide">
-              {t('home_vide')}
-              <br />
-              {t('home_vide_cta')}{' '}
-              <Link to="/pro">{t('home_vide_lien')}</Link>.
+      <main className="conteneur">
+        <section className="section histoire-section">
+          <div className="histoire-bloc">
+            <div className="histoire-photo">
+              <img src={PHOTO_HISTOIRE} alt="" loading="lazy" />
             </div>
-          )}
-
-          <div className="grille-salons">
-            {salons.map((s, i) => (
-              <Link key={s.id} to={`/s/${s.slug}`} className="carte-salon">
-                <div
-                  className="photo-salon"
-                  style={{
-                    backgroundImage: `url(${
-                      s.photos?.length
-                        ? photoUrl(s.photos[0])
-                        : PHOTOS_SALONS[i % PHOTOS_SALONS.length]
-                    })`,
-                  }}
-                >
-                  {!s.photos?.length && (
-                    <span className="initiales" aria-hidden="true">
-                      {initiales(s.name)}
-                    </span>
-                  )}
-                </div>
-                <div className="infos-salon">
-                  <div className="nom">{s.name}</div>
-                  {s.quartier && (
-                    <div className="meta">
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
-                        <path d="M12 21s-7-5.6-7-11a7 7 0 0 1 14 0c0 5.4-7 11-7 11Z" />
-                        <circle cx="12" cy="10" r="2.5" />
-                      </svg>
-                      {s.quartier}
-                    </div>
-                  )}
-                  {s.description && <div className="desc">{s.description}</div>}
-                </div>
-              </Link>
-            ))}
+            <div className="histoire-texte">
+              <p className="surtitre">{t('home_histoire_surtitre')}</p>
+              <h2 className="section-titre">{t('home_histoire_titre')}</h2>
+              <p>{t('home_histoire_p1')}</p>
+              <p>{t('home_histoire_p2')}</p>
+            </div>
           </div>
         </section>
 

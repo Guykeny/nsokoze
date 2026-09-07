@@ -2,8 +2,10 @@ import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import SiteHeader from '../components/SiteHeader.jsx'
 import SiteFooter from '../components/SiteFooter.jsx'
-import { categorieParSlug } from '../lib/categories.js'
+import { categorieParSlug, VILLES_BURUNDI } from '../lib/categories.js'
 import { useLang } from '../lib/i18n.jsx'
+
+const NB_VILLES_INITIAL = 3
 
 export default function Categorie() {
   const { slug } = useParams()
@@ -13,6 +15,7 @@ export default function Categorie() {
 
   const [q, setQ] = useState('')
   const [ou, setOu] = useState('')
+  const [toutesVilles, setToutesVilles] = useState(false)
 
   if (!cat) {
     return (
@@ -102,6 +105,33 @@ export default function Categorie() {
               </Link>
             ))}
           </div>
+        </section>
+
+        <section className="section">
+          <h2 className="section-titre">{t('home_villes_titre')}</h2>
+          <p className="section-sous">{t('home_villes_sous')}</p>
+          <div className="grille-salons">
+            {(toutesVilles ? VILLES_BURUNDI : VILLES_BURUNDI.slice(0, NB_VILLES_INITIAL)).map((v) => (
+              <Link
+                key={v.nom}
+                to={`/recherche?ou=${encodeURIComponent(v.nom)}&q=${encodeURIComponent(cat.qDefaut)}`}
+                className="carte-salon"
+              >
+                <div className="tuile-ville" style={{ background: v.fond }}>
+                  <span className="lettre" aria-hidden="true">{v.nom[0]}</span>
+                </div>
+                <div className="infos-salon">
+                  <div className="meta">{t('home_decouvrez')}</div>
+                  <div className="nom">{nom} · {v.nom}</div>
+                </div>
+              </Link>
+            ))}
+          </div>
+          {!toutesVilles && VILLES_BURUNDI.length > NB_VILLES_INITIAL && (
+            <button className="btn-voir-plus-villes" onClick={() => setToutesVilles(true)}>
+              {t('home_voir_plus_villes')}
+            </button>
+          )}
         </section>
 
         <article className="texte-editorial">
