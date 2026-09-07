@@ -17,6 +17,27 @@ export function photoUrl(path) {
   return supabase.storage.from('salon-photos').getPublicUrl(path).data.publicUrl
 }
 
+/** URL publique d'une image d'article : chemin du bucket blog-photos,
+ *  ou URL externe déjà complète (articles de démonstration). */
+export function blogPhotoUrl(path) {
+  if (/^https?:\/\//.test(path)) return path
+  return supabase.storage.from('blog-photos').getPublicUrl(path).data.publicUrl
+}
+
+/** Durée de lecture estimée (arrondie, minimum 1 min, ~200 mots/min). */
+export function dureeLecture(texte) {
+  const mots = (texte ?? '').trim().split(/\s+/).filter(Boolean).length
+  return Math.max(1, Math.round(mots / 200))
+}
+
+export function slugify(texte) {
+  return texte
+    .toLowerCase()
+    .normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '')
+}
+
 export function formatBif(n, devisLabel = 'Sur devis') {
   if (n == null) return devisLabel
   return new Intl.NumberFormat('fr-FR').format(n) + ' BIF'

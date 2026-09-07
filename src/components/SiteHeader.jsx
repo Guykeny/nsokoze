@@ -15,6 +15,7 @@ export default function SiteHeader() {
               {lang === 'en' && c.nom_en ? c.nom_en : c.nom}
             </NavLink>
           ))}
+          <NavLink to="/blog">{t('nav_blog')}</NavLink>
         </nav>
         <div className="header-actions">
           <div className="lang-toggle" role="group" aria-label="Langue / Language">

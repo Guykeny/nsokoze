@@ -9,6 +9,9 @@ import Login from './pages/Login.jsx'
 import Compte from './pages/Compte.jsx'
 import Dashboard from './pages/Dashboard.jsx'
 import ServicesPage from './pages/Services.jsx'
+import Blog from './pages/Blog.jsx'
+import Article from './pages/Article.jsx'
+import AdminBlog from './pages/AdminBlog.jsx'
 import { LangProvider } from './lib/i18n.jsx'
 import './styles.css'
 
@@ -25,6 +28,9 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         <Route path="/compte" element={<Compte />} />
         <Route path="/pro/agenda" element={<Dashboard />} />
         <Route path="/pro/services" element={<ServicesPage />} />
+        <Route path="/blog" element={<Blog />} />
+        <Route path="/blog/:slug" element={<Article />} />
+        <Route path="/admin/blog" element={<AdminBlog />} />
       </Routes>
     </BrowserRouter>
     </LangProvider>

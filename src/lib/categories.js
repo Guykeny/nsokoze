@@ -280,3 +280,16 @@ export const CATEGORIES = [
 export function categorieParSlug(slug) {
   return CATEGORIES.find((c) => c.slug === slug) ?? null
 }
+
+// Catégories du blog (indépendantes des catégories de prestations ci-dessus)
+export const CATEGORIES_BLOG = [
+  { id: 'conseils', nom: 'Conseils beauté', nom_en: 'Beauty tips' },
+  { id: 'actualites', nom: 'Actualités Nsokoze', nom_en: 'Nsokoze news' },
+  { id: 'salons', nom: 'Portraits de salons', nom_en: 'Salon spotlights' },
+]
+
+export function libelleCategorieBlog(id, lang) {
+  const c = CATEGORIES_BLOG.find((x) => x.id === id)
+  if (!c) return id
+  return lang === 'en' ? c.nom_en : c.nom
+}

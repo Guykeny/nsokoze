@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { supabase, photoUrl } from '../lib/supabase'
 import { useLang } from '../lib/i18n.jsx'
 import SiteHeader from '../components/SiteHeader.jsx'
+import SiteFooter from '../components/SiteFooter.jsx'
 
 // Photos d'illustration en attendant les vraies photos des salons
 const PHOTOS_SALONS = [
@@ -212,10 +213,7 @@ export default function Home() {
         </section>
       </main>
 
-      <footer className="pied">
-        <span className="logo-pied">Nsokoze</span>
-        {t('pied_slogan')}
-      </footer>
+      <SiteFooter />
     </>
   )
 }

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import SiteHeader from '../components/SiteHeader.jsx'
+import SiteFooter from '../components/SiteFooter.jsx'
 import { categorieParSlug } from '../lib/categories.js'
 import { useLang } from '../lib/i18n.jsx'
 
@@ -122,10 +123,7 @@ export default function Categorie() {
         </section>
       </main>
 
-      <footer className="pied">
-        <span className="logo-pied">Nsokoze</span>
-        {t('pied_slogan')}
-      </footer>
+      <SiteFooter />
     </>
   )
 }
