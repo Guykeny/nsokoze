@@ -9,6 +9,7 @@ const DICT = {
     header_compte: 'Mon compte',
     pied_slogan: 'La beauté burundaise, sur rendez-vous.',
     nav_blog: 'Blog',
+    menu_prestations: 'Prestations',
 
     // Blog
     blog_surtitre: 'Le blog',
@@ -311,6 +312,7 @@ const DICT = {
     header_compte: 'My account',
     pied_slogan: 'Burundian beauty, by appointment.',
     nav_blog: 'Blog',
+    menu_prestations: 'Services',
 
     // Blog
     blog_surtitre: 'The blog',
