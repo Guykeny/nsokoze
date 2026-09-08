@@ -12,6 +12,7 @@ import ServicesPage from './pages/Services.jsx'
 import Blog from './pages/Blog.jsx'
 import Article from './pages/Article.jsx'
 import AdminBlog from './pages/AdminBlog.jsx'
+import AdminKpi from './pages/AdminKpi.jsx'
 import { LangProvider } from './lib/i18n.jsx'
 import './styles.css'
 
@@ -31,6 +32,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         <Route path="/blog" element={<Blog />} />
         <Route path="/blog/:slug" element={<Article />} />
         <Route path="/admin/blog" element={<AdminBlog />} />
+        <Route path="/admin/kpi" element={<AdminKpi />} />
       </Routes>
     </BrowserRouter>
     </LangProvider>

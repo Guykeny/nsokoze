@@ -26,7 +26,7 @@ export default function SiteHeader() {
         </nav>
 
         <div className="header-actions">
-          <div className="lang-toggle" role="group" aria-label="Langue / Language">
+          <div className="lang-toggle" role="group" aria-label="Langue / Language / Ururimi">
             <button
               className={lang === 'fr' ? 'actif' : ''}
               onClick={() => setLang('fr')}
@@ -38,6 +38,13 @@ export default function SiteHeader() {
               onClick={() => setLang('en')}
             >
               EN
+            </button>
+            <button
+              className={lang === 'kir' ? 'actif' : ''}
+              onClick={() => setLang('kir')}
+              title="Kirundi — brouillon non relu par un locuteur natif"
+            >
+              KIR
             </button>
           </div>
           <Link to="/pro" className="pill pill-gris">
@@ -94,9 +101,10 @@ export default function SiteHeader() {
               {t('header_compte')}
             </Link>
 
-            <div className="lang-toggle lang-toggle-mobile" role="group" aria-label="Langue / Language">
+            <div className="lang-toggle lang-toggle-mobile" role="group" aria-label="Langue / Language / Ururimi">
               <button className={lang === 'fr' ? 'actif' : ''} onClick={() => setLang('fr')}>FR</button>
               <button className={lang === 'en' ? 'actif' : ''} onClick={() => setLang('en')}>EN</button>
+              <button className={lang === 'kir' ? 'actif' : ''} onClick={() => setLang('kir')} title="Kirundi — brouillon">KIR</button>
             </div>
           </nav>
         </>

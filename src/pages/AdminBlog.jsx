@@ -100,6 +100,10 @@ export default function AdminBlog() {
           <button onClick={() => setEdite({ ...VIDE })}>+ Nouvel article</button>
         </div>
 
+        <p style={{ marginBottom: 24 }}>
+          <Link to="/admin/kpi" className="btn-lien">Voir le tableau de bord →</Link>
+        </p>
+
         {loading && <div className="chargement"><span className="spinner" />Chargement…</div>}
 
         {!loading && articles.length === 0 && (

@@ -1,7 +1,15 @@
 import { createContext, useContext, useState } from 'react'
 
-// Traductions FR / EN. Les touches kirundi (Kaze, Murakoze) sont
-// volontairement gardées dans les deux langues : c'est l'identité Nsokoze.
+// Traductions FR / EN / KIR. Les touches kirundi (Kaze, Murakoze) dans
+// FR/EN sont volontairement gardées : c'est l'identité Nsokoze.
+//
+// ⚠️ BROUILLON KIRUNDI — NON VALIDÉ PAR UN LOCUTEUR NATIF.
+// Les clés du bloc `kir` ci-dessous ont été traduites automatiquement,
+// sans relecture humaine. Elles couvrent le parcours principal (accueil,
+// recherche, réservation, header/pied de page) ; tout le reste retombe
+// sur le français. NE PAS considérer ce texte comme fiable pour une
+// publication publique tant qu'un locuteur natif ne l'a pas relu et
+// corrigé. Voir le commentaire au-dessus du bloc `kir` plus bas.
 const DICT = {
   fr: {
     // Header / pied
@@ -633,14 +641,185 @@ const DICT = {
     cat_cta_titre: 'Do you offer these services?',
     cat_cta_texte: 'Join Nsokoze: create your free page, list your services and receive bookings online.',
   },
+
+  // ============================================================
+  // ⚠️ BROUILLON — kirundi non relu par un locuteur natif.
+  // Couvre le parcours principal uniquement ; les clés absentes ici
+  // retombent automatiquement sur le français (voir t() plus bas).
+  // À faire relire avant toute mise en avant publique de cette langue.
+  // ============================================================
+  kir: {
+    header_pro: 'Ndi umukozi w’ubwiza',
+    header_compte: 'Konti yanje',
+    pied_slogan: 'Ubwiza bw’Uburundi, ku wakiriwe.',
+    nav_blog: 'Blog',
+    menu_prestations: 'Ivyo dukora',
+
+    pied_description: 'Urubuga rwo kwiyandikisha ku bwiza buhuza salon zo mu Burundi n’abakiriya babo, kuri interineti, nta guhamagara.',
+    pied_col_prestations: 'Ivyo dukora',
+    pied_col_blog: 'Blog',
+    pied_col_nsokoze: 'Nsokoze',
+    pied_lien_recherche: 'Rondera salon',
+    pied_lien_pro: 'Ahantu h’umukozi',
+
+    home_kaze: 'Kaze!',
+    home_titre: 'Ubwiza bwawe, Bidatevye.',
+    devise_simple: 'Vyoroshe',
+    devise_immediat: 'Ako kanya',
+    devise_24: '24h/24',
+    rech_quoi: 'Urondera iki?',
+    rech_quoi_ph: 'Izina rya salon, igikorwa (imisatsi…)',
+    rech_ou: 'Hehe',
+    rech_ou_ph: 'Ikibare, igisagara…',
+    rech_btn: 'Rondera',
+    home_villes_titre: 'Rondera salon yawe hakurikijwe igisagara',
+    home_villes_sous: 'Salon n’ivyumba vy’ubwiza biri hafi yawe.',
+    home_voir_plus_villes: 'Reba ibindi bisagara',
+
+    home_histoire_surtitre: 'Igikorwa kiriko kirahinduka',
+    home_histoire_titre: 'Kwimosha mu Burundi, kera nubu',
+    home_histoire_p1: 'Kera, Kwimosha mu Burundi vyari bishingiye ku vyo bantu bavuga: salon yo muri quartier, umukebyi azwi n’umuryango, uguhura kwavugwa mu kanwa ata kizoba c’ukuguma. Uwo mwuga wari ushingiye cane ku izina umuntu afise mu babanyi.',
+    home_histoire_p2: 'Mu myaka iheze, iki gikorwa carahindutse: salon zirushirije kuronka ibikoresho, ivyo bakora birushirije kwaguka, abakiriya barushiriza gukenera ko basanga umukozi ku gihe n’ibiciro biboneka neza. Nsokoze ifasha iryo hinduka mu guha salon agenda ya interineti no guha abakiriya uburyo bworoshe bwo kwiyandikisha, nta guhamagara canke ukwiyumvira.',
+    home_decouvrez: 'Menya',
+    home_salons_a: 'Salon zo i',
+    home_dispo_titre: 'Salon ziriho',
+    home_dispo_sous: 'Hitamwo salon yawe wandikishe umwanya wawe kuri interineti.',
+    home_vide: 'Nta salon iyandikijwe ubu.',
+    home_vide_cta: 'Ufise salon?',
+    home_vide_lien: 'Fungura urupapuro rwawe ku buntu',
+    home_pro_titre: 'Menya abakozi bacu',
+    home_pro_lien: 'Reba vyinshi',
+    home_pro_txt_coiffure: 'Ushaka guhindura imisatsi canke gusa kuyisukura? Abakebyi bacu bawugufasha, kuva ku misatsi gushushanywa gushika ku "brushing".',
+    home_pro_txt_barbier: 'Gukebwa neza, "dégradé" yiza canke gukebwa ubwanwa: abakebyi b’ubwanwa ba Nsokoze bafata umwanya bakenewe kugira ico bakoze kibe iciza.',
+    home_pro_txt_manucure: 'Amaboko n’ibirenge vyitaweho, gushira inzara canke "vernis" imara igihe kirekire: rondera ivyumba vy’inzara bihuye n’ubwoko bwawe.',
+    home_pro_txt_institut_de_beaute: 'Kwita ku maso, gukurako ubwoya canke kwisiga ku bw’umusi mukuru: ivyumba vy’ubwiza bifasha urukoba rwawe n’ukwizigira kwawe.',
+    home_pro_txt_bien_etre: 'Gukandwa kw’umubiri kworoshe canke umwanya wo kuruhuka, wandikishwa mu bihe bike.',
+
+    home_cm_titre: 'Bikora gute?',
+    home_cm_sous: 'Uguhura kwawe kw’ubwiza mu ntambwe zitatu, nta guhamagara.',
+    home_e1_t: 'Hitamwo',
+    home_e1_p: 'Rondera salon yawe n’igikorwa gikubereye, ibiciro biboneka neza.',
+    home_e2_t: 'Wiyandikishe',
+    home_e2_p: 'Hitamwo umwanya uri kirumara mu gahunda ya salon, ku murango canke ku mugoroba.',
+    home_e3_t: 'Vyemejwe',
+    home_e3_p: 'Uguhura kwawe kwabitswe ako kanya. Salon irakurindiriye.',
+    home_cta_titre: 'Uri umukozi w’ubwiza?',
+    home_cta_texte: 'Fungura urupapuro rwawe rwo kwiyandikisha ku buntu mu miniti itanu, usangire ihuza ryawe kuri WhatsApp, wakire uguhura kwawe kuri interineti, ku murango canke ku mugoroba.',
+    home_cta_btn: 'Fungura urupapuro rwanje ku buntu',
+
+    r_titre: 'Hitamwo salon',
+    r_sous: 'Salon n’ivyumba biri hafi ya {lieu} — kwiyandikisha kuri interineti.',
+    r_quoi_ph: 'Salon, igikorwa…',
+    r_femme: 'Imisatsi y’abagore',
+    r_homme: 'Imisatsi y’abagabo',
+    r_chargement: 'Biratangura…',
+    r_vide: 'Nta salon ihuye n’ivyo urondera.',
+    r_prochain: 'Umwanya ukurikira uri kirumara:',
+    r_complet: 'Vyuzuye mu misi {n} iri imbere',
+    r_auj: 'Uyu musi',
+    r_demain: 'Ejo',
+    r_matin: 'Mu gitondo',
+    r_aprem: 'Ku mugoroba',
+    r_ferme: 'Yugaye uyu musi',
+    r_savoir: 'Menya vyinshi',
+    r_reduire: 'Gufunga',
+    r_sans_desc: 'Iyi salon ntiyaranditse ivyerekeye ubuzima bwayo.',
+    r_autres: '+ {n} ibindi bikorwa ku rupapuro rwa salon',
+    r_tel: 'Terefone:',
+    r_position: 'Ahantu ntaho hashizwe',
+    r_rdv: 'Wiyandikishe',
+    r_voir_carte: 'Reba ikarata',
+    r_voir_liste: 'Reba urutonde',
+
+    b_introuvable: 'Salon ntiboneste',
+    b_verif_lien: 'Raba ihuza rakwegereye.',
+    b_confirme: 'Murakoze! Uguhura kwemejwe',
+    b_avite: 'Turabonana vuba i {salon}!',
+    b_service: 'Igikorwa',
+    b_date: 'Itariki',
+    b_heure: 'Isaha',
+    b_duree: 'Igihe',
+    b_prix: 'Igiciro',
+    b_salon: 'Salon',
+    b_min: 'iminota',
+    b_empechement: 'Nimba udashoboye kuza, menyesha salon kuri {tel}.',
+    b_autre_rdv: 'Wiyandikishe ku wundi mwanya',
+    b_e1: 'Hitamwo igikorwa',
+    b_e2: 'Hitamwo itariki n’isaha',
+    b_e3_ok: 'Emeza uguhura kwawe',
+    b_e3_auth: 'Winjire kugira wiyandikishe',
+    b_sans_services: 'Iyi salon ntiraranditse ivyo ikora.',
+    b_plus_tot: 'Umwanya wa mbere uri kirumara:',
+    b_a: 'saa',
+    b_aucun: 'Nta mwanya uri kirumara mu misi {n} iri imbere. Menyesha salon kuri {tel}.',
+    b_aucun_jour: 'Nta mwanya uri kirumara uwo musi. Gerageza indi tariki.',
+    b_auj: 'Uyu musi',
+    b_creneaux: 'Imyanya…',
+    b_tab_new: 'Uruzo rwa mbere',
+    b_tab_login: 'Mfise konti',
+    b_une_fois: 'Rimwe gusa: kwiyandikisha kwawe kw’imbere kuzoba mu bihe bike.',
+    b_nom: 'Izina ryawe',
+    b_tel: 'Nomero yawe ya terefone',
+    b_email: 'Email',
+    b_mdp: 'Ijambo ry’ibanga',
+    b_mdp_aide: 'Inyuguti 6 zibura.',
+    b_creer: 'Fungura konti yanje maze nkomeze',
+    b_connecter: 'Injira',
+    b_instant: 'Umwanya muto…',
+    b_completer: 'Uzuza amakuru yawe: salon izomenya uwo yakira.',
+    b_enregistrer: 'Bika maze ukomeze',
+    b_reserve_pour: 'Vyandikishijwe ku izina rya',
+    b_pas_vous: 'Si wewe?',
+    b_confirmer: 'Emeza uguhura',
+    b_en_cours: 'Kwiyandikisha kurabera…',
+    b_confirm_court: 'Emeza',
+    b_identifier: 'Injira ↑',
+    err_creneau_pris: 'Uwo mwanya wamaze gufatwa n’uwundi muntu. Hitamwo uwundi.',
+    err_creneau_passe: 'Uwo mwanya warashize.',
+    err_hors_horaires: 'Salon irugaye muri iyo saha.',
+    err_nom: 'Shira izina ryawe.',
+    err_tel: 'Shira nomero ya terefone ikwiye.',
+    err_service: 'Iki gikorwa ntigicishwa.',
+    err_generique: 'Kwiyandikisha ntikwakunze. Ongera ugerageze.',
+    err_connexion_requise: 'Injira kugira wiyandikishe.',
+    err_identifiants: 'Email canke ijambo ry’ibanga sibyo.',
+    err_compte_existant: 'Konti isanzwe ihari kuri iyi email. Injira.',
+
+    c_titre: 'Konti yanje',
+    c_sous: 'Bika amakuru yawe wiyandikishe mu bihe bike.',
+    c_connexion: 'Kwinjira',
+    c_creer: 'Fungura konti',
+    c_bonjour: 'Muraho',
+    c_nom: 'Izina',
+    c_tel2: 'Terefone',
+    c_trouver: 'Rondera salon',
+    c_espace_salon: 'Ja ahantu h’umukozi',
+    c_deconnexion: 'Sohoka',
+    c_completer_titre: 'Uzuza amakuru yawe',
+    c_completer_sous: 'Izina ryawe na terefone yawe: salon izomenya uwo yakira.',
+    c_enregistrer: 'Bika',
+    c_pro_q: 'Ufise salon?',
+    c_pro_lien: 'Fungura konti y’umukozi',
+    c_chargement: 'Biratangura…',
+
+    sur_devis: 'Bisabwa',
+
+    cat_introuvable: 'Icyiciro ntikiboneste',
+    cat_retour: 'Garuka ahabanza',
+    cat_cta_titre: 'Utanga ivyo bikorwa?',
+    cat_cta_texte: 'Injira muri Nsokoze: fungura urupapuro rwawe ku buntu, werekane ivyo ukora, wakire uguhura kuri interineti.',
+  },
 }
 
 const Ctx = createContext(null)
 
+const LANGUES_VALIDES = ['fr', 'en', 'kir']
+
 export function LangProvider({ children }) {
-  const [lang, setLangState] = useState(() =>
-    localStorage.getItem('nsokoze_lang') === 'en' ? 'en' : 'fr'
-  )
+  const [lang, setLangState] = useState(() => {
+    const sauve = localStorage.getItem('nsokoze_lang')
+    return LANGUES_VALIDES.includes(sauve) ? sauve : 'fr'
+  })
 
   function setLang(l) {
     setLangState(l)
@@ -657,7 +836,9 @@ export function LangProvider({ children }) {
     return txt
   }
 
-  const locale = lang === 'fr' ? 'fr-FR' : 'en-GB'
+  // Le kirundi n'a pas de locale Intl dédiée dans les navigateurs :
+  // les dates/heures suivent le format français, déjà d'usage courant au Burundi.
+  const locale = lang === 'en' ? 'en-GB' : 'fr-FR'
   return (
     <Ctx.Provider value={{ lang, setLang, t, locale }}>
       {children}
