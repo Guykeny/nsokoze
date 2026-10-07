@@ -1,0 +1,83 @@
+/* ---------- Pied de page ---------- */
+.pied {
+  margin-top: 70px;
+  border-top: 1px solid var(--bordure);
+  padding: 30px 20px 46px;
+  color: var(--texte-2);
+  font-size: 0.85rem;
+  text-align: center;
+}
+.pied .logo-pied {
+  display: block;
+  font-weight: 700;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--noir);
+  font-size: 0.9rem;
+  margin-bottom: 8px;
+}
+.pied a { color: var(--noir); }
+
+/* ---------- Pied de page riche (colonnes) ---------- */
+.pied-riche {
+  margin-top: 70px;
+  background: var(--encre);
+  color: rgba(255, 255, 255, 0.72);
+}
+.pied-riche-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 48px 20px 32px;
+  display: grid;
+  grid-template-columns: 1.6fr repeat(3, 1fr);
+  gap: 28px;
+}
+.pied-marque .logo-pied {
+  display: block;
+  font-weight: 700;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: #fff;
+  font-size: 0.95rem;
+  margin-bottom: 12px;
+}
+.pied-marque p {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.6;
+  max-width: 34ch;
+}
+.pied-colonne { display: flex; flex-direction: column; gap: 10px; }
+.pied-colonne h3 {
+  color: #fff;
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin: 0 0 4px;
+}
+.pied-colonne a {
+  color: rgba(255, 255, 255, 0.72);
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+.pied-colonne a:hover { color: var(--or); text-decoration: underline; }
+
+.pied-riche-bas {
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 18px 20px;
+  text-align: center;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+@media (max-width: 760px) {
+  .pied-riche-inner { grid-template-columns: 1fr 1fr; }
+  .pied-marque { grid-column: 1 / -1; }
+}
+@media (max-width: 480px) {
+  .pied-riche-inner { grid-template-columns: 1fr; }
+}
+
+.cta-blog { margin-top: 30px; }
+

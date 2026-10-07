@@ -1,0 +1,103 @@
+/* ============================================================
+   Mon compte, avis, infos salon, alertes, pages de texte
+   ============================================================ */
+
+a.btn { text-decoration: none; }
+
+/* ---------- Infos pratiques du salon ---------- */
+.actions-salon {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 12px;
+}
+.actions-salon .btn-pilule { padding: 8px 16px; }
+
+.bloc-infos { margin-top: 8px; }
+.bloc-infos .carte-osm { height: 220px; border-radius: var(--radius); }
+.horaires-salon .ligne-recap span:first-child { text-transform: capitalize; }
+
+/* ---------- Notes et avis ---------- */
+.etoiles { color: var(--or); letter-spacing: 1px; }
+.etoiles-vides { color: var(--bordure); }
+
+.note-salon {
+  margin: 4px 0 0;
+  font-weight: 600;
+  font-size: 0.92rem;
+}
+.note-salon span:last-child { color: var(--texte-2); font-weight: 400; }
+
+.carte.avis p { margin: 6px 0 0; }
+.avis-entete {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.avis-date { color: var(--texte-2); font-size: 0.85rem; margin-left: auto; }
+
+.form-avis { margin-top: 10px; display: grid; gap: 8px; }
+.form-avis textarea {
+  font: inherit;
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--bordure);
+  border-radius: var(--radius-sm);
+  resize: vertical;
+}
+.choix-etoiles { display: flex; gap: 4px; }
+.choix-etoiles button {
+  width: auto;
+  padding: 2px 4px;
+  background: none;
+  color: var(--bordure);
+  font-size: 1.7rem;
+  line-height: 1;
+}
+.choix-etoiles button:hover,
+.choix-etoiles button.pleine { background: none; color: var(--or); }
+
+/* ---------- Badge « confirmé » (Mon compte) ---------- */
+.badge.confirmed { background: var(--vert-fond); color: var(--vert); }
+
+/* ---------- Suppression du compte ---------- */
+.zone-danger {
+  margin-top: 36px;
+  border-top: 1px solid var(--bordure);
+  padding-top: 14px;
+}
+.zone-danger summary {
+  cursor: pointer;
+  color: var(--texte-2);
+  font-size: 0.9rem;
+}
+.btn-danger { background: var(--erreur); }
+.btn-danger:hover { background: #8e1d17; }
+
+/* ---------- Alerte « nouveau RDV » (agenda pro) ---------- */
+.alerte-rdv {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  background: var(--vert-fond);
+  color: var(--vert);
+  border-radius: var(--radius);
+  padding: 10px 14px;
+  margin-bottom: 12px;
+  font-weight: 600;
+}
+.alerte-rdv .btn-fermer { color: var(--vert); }
+
+/* ---------- Pages de texte (légal, à propos) et 404 ---------- */
+.page-texte h2 { font-size: 1.1rem; margin-top: 28px; }
+.page-texte p { margin: 0 0 12px; }
+
+.code-404 {
+  font-size: 4.5rem;
+  font-weight: 700;
+  color: var(--bordure);
+  margin: 20px 0 0;
+  line-height: 1;
+}

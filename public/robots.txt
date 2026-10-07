@@ -1,0 +1,7 @@
+User-agent: *
+Disallow: /pro/
+Disallow: /admin/
+Disallow: /compte
+Disallow: /mot-de-passe
+
+Sitemap: https://nsokoze.bi/sitemap.xml

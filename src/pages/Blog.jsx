@@ -3,14 +3,15 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { supabase, blogPhotoUrl, dureeLecture } from '../lib/supabase'
 import { CATEGORIES_BLOG, libelleCategorieBlog } from '../lib/categories.js'
 import { useLang } from '../lib/i18n.jsx'
+import { useMeta } from '../lib/useMeta.js'
 import SiteHeader from '../components/SiteHeader.jsx'
 import SiteFooter from '../components/SiteFooter.jsx'
-import Faq from '../components/Faq.jsx'
 import CarrouselArticles from '../components/CarrouselArticles.jsx'
 import { useEstAdmin } from '../lib/useEstAdmin.js'
 
 export default function Blog() {
-  const { t, lang, locale } = useLang()
+  const { t, lang } = useLang()
+  useMeta({ titre: t('nav_blog') })
   const estAdmin = useEstAdmin()
   const [params, setParams] = useSearchParams()
   const [articles, setArticles] = useState([])
@@ -38,13 +39,6 @@ export default function Blog() {
     if (id === filtre) setParams({})
     else setParams({ cat: id })
   }
-
-  const questionsFaq = [
-    { q: t('blog_faq_q1'), r: t('blog_faq_r1') },
-    { q: t('blog_faq_q2'), r: t('blog_faq_r2') },
-    { q: t('blog_faq_q3'), r: t('blog_faq_r3') },
-    { q: t('blog_faq_q4'), r: t('blog_faq_r4') },
-  ]
 
   return (
     <>
@@ -144,13 +138,6 @@ export default function Blog() {
             </div>
           )}
         </section>
-
-        <Faq
-          surtitre={t('blog_faq_surtitre')}
-          titre={t('blog_faq_titre')}
-          sous={t('blog_faq_sous')}
-          questions={questionsFaq}
-        />
 
         <section className="cta-pro cta-blog">
           <h2>{t('blog_cta_titre')}</h2>

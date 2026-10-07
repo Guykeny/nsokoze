@@ -1,0 +1,74 @@
+/* ============================================================
+   Nsokoze — design system (esprit Planity : monochrome, épuré)
+   ============================================================ */
+:root {
+  /* Identité Nsokoze : prune & or */
+  --noir: #7c2e62;         /* couleur d'action principale (prune) */
+  --noir-2: #5e2049;       /* prune foncé (survol) */
+  --encre: #241627;        /* sections sombres */
+  --texte: #241627;
+  --texte-2: #837087;
+  --fond: #ffffff;
+  --fond-doux: #faf3f6;
+  --bordure: #ecdfe8;
+  --or: #e8b04b;
+  --or-fonce: #b97f1e;
+  --erreur: #b3261e;
+  --erreur-fond: #fdecea;
+  --vert: #1e7d4f;
+  --vert-fond: #e6f4ec;
+  --whatsapp: #1faa53;
+
+  --radius-sm: 6px;
+  --radius: 10px;
+  --radius-lg: 16px;
+  --ombre-1: 0 1px 2px rgba(17, 17, 17, 0.05), 0 2px 12px rgba(17, 17, 17, 0.05);
+  --ombre-2: 0 10px 34px rgba(17, 17, 17, 0.16);
+
+  --font-body: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--fond);
+  color: var(--texte);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+.page {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 24px 16px 72px;
+}
+
+.conteneur {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+h1, h2, h3 {
+  line-height: 1.2;
+  margin: 0 0 8px;
+  letter-spacing: -0.015em;
+  font-weight: 600;
+}
+
+h1 { font-size: 1.8rem; }
+h2 { font-size: 1.3rem; margin-top: 34px; margin-bottom: 14px; }
+
+.sous-titre { color: var(--texte-2); margin: 0 0 20px; }
+.surtitre {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--texte-2);
+  margin: 0 0 4px;
+}
+

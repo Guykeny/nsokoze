@@ -1,0 +1,400 @@
+/* ============================================================
+   Page de recherche (liste + carte OpenStreetMap)
+   ============================================================ */
+.barre-outils {
+  background: var(--fond);
+  border-bottom: 1px solid var(--bordure);
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.barre-recherche.compacte {
+  box-shadow: none;
+  border: 1px solid var(--bordure);
+  padding: 4px;
+  max-width: 560px;
+  flex: 1;
+  min-width: 260px;
+}
+.barre-recherche.compacte .champ-recherche { padding: 4px 12px; }
+.barre-recherche.compacte .champ-recherche label { font-size: 0.72rem; }
+.barre-recherche.compacte .champ-recherche input { font-size: 0.92rem; }
+.barre-recherche.compacte .btn-rechercher {
+  padding: 0 16px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+}
+
+.filtres { display: flex; gap: 8px; flex-wrap: wrap; }
+.chip-filtre {
+  width: auto;
+  background: var(--fond);
+  color: var(--texte);
+  border: 1.5px solid var(--bordure);
+  border-radius: 999px;
+  padding: 9px 16px;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+.chip-filtre:hover { background: var(--fond); border-color: var(--noir); }
+.chip-filtre.actif {
+  background: var(--noir);
+  border-color: var(--noir);
+  color: #fff;
+}
+
+.recherche-layout {
+  display: grid;
+  grid-template-columns: minmax(380px, 46%) 1fr;
+  height: calc(100vh - 130px);
+}
+.colonne-resultats {
+  overflow-y: auto;
+  padding: 20px;
+  background: var(--fond);
+}
+.titre-resultats { font-size: 1.15rem; margin: 0 0 2px; }
+.colonne-carte { position: relative; }
+.carte-osm { width: 100%; height: 100%; background: var(--fond-doux); }
+.carte-position { height: 280px; border-radius: var(--radius); z-index: 0; }
+
+.resultat-salon {
+  border: 1px solid var(--bordure);
+  border-radius: var(--radius);
+  padding: 14px;
+  margin-bottom: 14px;
+  background: var(--fond);
+}
+.resultat-haut { display: flex; gap: 14px; }
+.photo-resultat {
+  width: 118px;
+  min-height: 108px;
+  border-radius: var(--radius-sm);
+  background-color: var(--fond-doux);
+  background-size: cover;
+  background-position: center;
+  flex: none;
+}
+.infos-resultat { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.infos-resultat .nom { font-weight: 600; font-size: 1.05rem; }
+.infos-resultat .meta {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--texte-2);
+  font-size: 0.88rem;
+  margin-top: 2px;
+}
+.infos-resultat .desc {
+  color: var(--texte-2);
+  font-size: 0.9rem;
+  margin-top: 6px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+.pied-resultat {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--bordure);
+}
+
+/* Prochain créneau libre */
+.dispo-prochaine {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 10px;
+  padding: 8px 12px;
+  background: var(--fond-doux);
+  border-radius: var(--radius-sm);
+  font-size: 0.88rem;
+  color: var(--texte-2);
+  flex-wrap: wrap;
+}
+.dispo-prochaine strong { color: var(--texte); font-weight: 600; }
+
+/* Pastilles matin / après-midi par jour */
+.jours-dispo {
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+.jour-dispo {
+  flex: 1;
+  min-width: 120px;
+  border: 1px solid var(--bordure);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px 10px;
+}
+.jour-dispo .jour-label {
+  display: block;
+  font-size: 0.76rem;
+  font-weight: 600;
+  text-transform: capitalize;
+  color: var(--texte-2);
+  margin-bottom: 7px;
+}
+.jour-dispo .periodes { display: flex; gap: 6px; }
+.chip-periode {
+  flex: 1;
+  width: auto;
+  padding: 7px 6px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  background: var(--fond);
+  color: var(--texte);
+  border: 1.5px solid var(--bordure);
+  border-radius: 999px;
+}
+.chip-periode:hover:not(:disabled) {
+  background: var(--noir);
+  border-color: var(--noir);
+  color: #fff;
+}
+.chip-periode:disabled {
+  background: var(--fond-doux);
+  border-color: transparent;
+  color: #c2bcb4;
+  text-decoration: line-through;
+  cursor: not-allowed;
+}
+
+/* Bouton et zone « En savoir plus » */
+.btn-savoir {
+  width: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  color: var(--texte);
+  font-weight: 500;
+  font-size: 0.92rem;
+  padding: 6px 2px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.btn-savoir:hover { background: none; color: var(--texte-2); }
+.btn-savoir svg { transition: transform 150ms ease; }
+
+.details-salon {
+  margin-top: 12px;
+  padding: 14px;
+  background: var(--fond-doux);
+  border-radius: var(--radius-sm);
+}
+.details-salon .desc-complete { margin: 0 0 10px; line-height: 1.65; }
+.liste-prestations {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.liste-prestations li {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 6px 0;
+  font-size: 0.92rem;
+}
+.liste-prestations .pointille {
+  flex: 1;
+  border-bottom: 1px dotted var(--bordure);
+}
+.liste-prestations .duree { color: var(--texte-2); white-space: nowrap; }
+.liste-prestations .prix { font-weight: 600; white-space: nowrap; }
+.liste-prestations .autres { color: var(--texte-2); font-size: 0.85rem; }
+.tel-salon { margin: 10px 0 0; font-size: 0.9rem; }
+.tel-salon a { color: var(--noir); }
+
+/* Marqueur noir sur la carte */
+.marqueur {
+  display: block;
+  width: 22px;
+  height: 22px;
+  background: var(--noir);
+  border: 3px solid #fff;
+  border-radius: 50% 50% 50% 4px;
+  transform: rotate(-45deg);
+  box-shadow: 0 2px 8px rgba(17, 17, 17, 0.4);
+}
+.popup-salon { font-family: var(--font-body); font-size: 0.9rem; line-height: 1.5; }
+.popup-salon a { color: var(--noir); font-weight: 600; }
+
+/* Bascule liste / carte (mobile) */
+.bascule-carte {
+  display: none;
+  position: fixed;
+  bottom: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 40;
+  border: none;
+  box-shadow: var(--ombre-2);
+  cursor: pointer;
+}
+
+@media (max-width: 900px) {
+  .recherche-layout {
+    grid-template-columns: 1fr;
+    height: auto;
+  }
+  .colonne-carte { height: calc(100vh - 190px); }
+  .cachee-mobile { display: none; }
+  .bascule-carte { display: inline-flex; }
+}
+
+/* Recherche d'adresse (espace pro) */
+.champ-adresse { display: flex; gap: 8px; }
+.champ-adresse input { flex: 1; }
+.btn-chercher { width: auto; padding: 12px 18px; flex: none; }
+
+.suggestions {
+  border: 1px solid var(--bordure);
+  border-radius: var(--radius-sm);
+  margin-top: 6px;
+  overflow: hidden;
+}
+.suggestion {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: var(--fond);
+  color: var(--texte);
+  font-weight: 400;
+  font-size: 0.9rem;
+  padding: 11px 14px;
+  border: none;
+  border-bottom: 1px solid var(--bordure);
+  border-radius: 0;
+  cursor: pointer;
+}
+.suggestion:last-child { border-bottom: none; }
+.suggestion:hover { background: var(--fond-doux); }
+
+/* ---------- Photos du salon ---------- */
+.grille-photos {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 10px;
+}
+.photo-mini {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: var(--fond-doux);
+}
+.photo-mini img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.badge-principale {
+  position: absolute;
+  bottom: 6px;
+  left: 6px;
+  background: rgba(17, 17, 17, 0.8);
+  color: #fff;
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 999px;
+}
+.photo-actions {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  display: flex;
+  gap: 5px;
+}
+.photo-btn {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--texte);
+  font-size: 0.85rem;
+  line-height: 1;
+  box-shadow: var(--ombre-1);
+}
+.photo-btn:hover { background: #fff; color: var(--noir); }
+.btn-ajout-photo {
+  aspect-ratio: 4 / 3;
+  width: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: var(--fond);
+  color: var(--texte-2);
+  border: 1.5px dashed var(--bordure);
+  border-radius: var(--radius-sm);
+  font-size: 0.88rem;
+  font-weight: 500;
+}
+.btn-ajout-photo:hover {
+  background: var(--fond-doux);
+  border-color: var(--noir);
+  color: var(--noir);
+}
+
+/* Galerie sur la page de réservation */
+.galerie-salon {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  margin: 0 0 20px;
+  padding-bottom: 6px;
+  scrollbar-width: thin;
+}
+.galerie-salon img {
+  height: 190px;
+  border-radius: var(--radius);
+  flex: none;
+  max-width: 78%;
+  object-fit: cover;
+}
+@media (max-width: 640px) {
+  .galerie-salon img { height: 150px; }
+}
+
+/* Cases à cocher clientèle */
+.cases-genres { display: flex; gap: 10px; flex-wrap: wrap; }
+.case-genre {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 10px 16px;
+  border: 1.5px solid var(--bordure);
+  border-radius: 999px;
+  font-weight: 500;
+  font-size: 0.92rem;
+  cursor: pointer;
+}
+.case-genre:has(input:checked) {
+  border-color: var(--noir);
+  background: var(--fond-doux);
+}
+.case-genre input {
+  width: auto;
+  margin: 0;
+  accent-color: var(--noir);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}

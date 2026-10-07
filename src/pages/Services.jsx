@@ -5,6 +5,7 @@ import { supabase, WEEKDAYS, formatBif, photoUrl } from '../lib/supabase'
 import SiteHeader from '../components/SiteHeader.jsx'
 import ProShell from '../components/ProShell.jsx'
 import { useLang } from '../lib/i18n.jsx'
+import { useMeta } from '../lib/useMeta.js'
 import { CartePosition } from '../components/Carte.jsx'
 import { chercherAdresse, adresseDepuisCoords, extraireLieux } from '../lib/geo.js'
 
@@ -13,6 +14,7 @@ const JOURS_EN = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Frida
 export default function ServicesPage() {
   const nav = useNavigate()
   const { t, lang } = useLang()
+  useMeta({ titre: t('p_services'), noindex: true })
   const joursSemaine = lang === 'en' ? JOURS_EN : WEEKDAYS
   const [salon, setSalon] = useState(null)
   const [services, setServices] = useState([])

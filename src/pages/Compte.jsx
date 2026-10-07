@@ -1,15 +1,89 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { supabase } from '../lib/supabase'
+import { supabase, formatBif, formatTime, telInternational } from '../lib/supabase'
 import { useLang } from '../lib/i18n.jsx'
+import { useMeta } from '../lib/useMeta.js'
+import { dateLocale } from '../lib/temps.js'
+import { DELAI_ANNULATION_H } from '../lib/config.js'
+import { invaliderSession } from '../lib/useSession.js'
 import SiteHeader from '../components/SiteHeader.jsx'
+
+const CHAMPS_MES_RDV =
+  'id, starts_at, ends_at, status, services(name, price_bif), salons(name, slug, phone, quartier)'
+
+const CLES_STATUT = {
+  confirmed: 'st_confirmed',
+  cancelled: 'st_cancelled',
+  no_show: 'st_no_show',
+  done: 'st_done',
+}
+
+/** Formulaire d'avis (note 1-5 + commentaire) pour un RDV passé. */
+function FormAvis({ rdvId, onEnvoye }) {
+  const { t } = useLang()
+  const [note, setNote] = useState(0)
+  const [commentaire, setCommentaire] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [err, setErr] = useState(null)
+
+  async function envoyer(e) {
+    e.preventDefault()
+    setBusy(true)
+    setErr(null)
+    const { error } = await supabase.rpc('laisser_avis', {
+      p_appointment_id: rdvId,
+      p_note: note,
+      p_commentaire: commentaire,
+    })
+    setBusy(false)
+    if (error) { setErr(t('err_avis')); return }
+    onEnvoye()
+  }
+
+  return (
+    <form className="form-avis" onSubmit={envoyer}>
+      <div className="choix-etoiles" role="radiogroup" aria-label="Note">
+        {[1, 2, 3, 4, 5].map((n) => (
+          <button
+            key={n}
+            type="button"
+            role="radio"
+            aria-checked={note === n}
+            aria-label={`${n}/5`}
+            className={n <= note ? 'pleine' : ''}
+            onClick={() => setNote(n)}
+          >
+            ★
+          </button>
+        ))}
+      </div>
+      <textarea
+        value={commentaire}
+        onChange={(e) => setCommentaire(e.target.value)}
+        placeholder={t('c_avis_commentaire')}
+        maxLength={1000}
+        rows={3}
+      />
+      {err && <p className="erreur">{err}</p>}
+      <button type="submit" disabled={busy || note === 0}>
+        {busy ? t('b_instant') : t('c_envoyer')}
+      </button>
+    </form>
+  )
+}
 
 export default function Compte() {
   const nav = useNavigate()
-  const { t } = useLang()
+  const { t, locale } = useLang()
+  useMeta({ titre: t('c_titre'), noindex: true })
   const [session, setSession] = useState(undefined)
   const [profil, setProfil] = useState(null)
   const [aUnSalon, setAUnSalon] = useState(false)
+
+  const [rdvs, setRdvs] = useState([])
+  const [avisDonnes, setAvisDonnes] = useState(() => new Set()) // appointment_id
+  const [avisOuvert, setAvisOuvert] = useState(null)
+  const [rdvErr, setRdvErr] = useState(null)
 
   const [mode, setMode] = useState('login') // login | signup
   const [nom, setNom] = useState('')
@@ -42,7 +116,55 @@ export default function Compte() {
       .eq('owner_id', session.user.id)
       .maybeSingle()
       .then(({ data }) => setAUnSalon(Boolean(data)))
+    chargerRdvs(session.user.id)
   }, [session])
+
+  async function chargerRdvs(userId) {
+    const [{ data: r }, { data: av }] = await Promise.all([
+      supabase
+        .from('appointments')
+        .select(CHAMPS_MES_RDV)
+        .eq('user_id', userId)
+        .order('starts_at', { ascending: false })
+        .limit(50),
+      supabase.from('avis').select('appointment_id').eq('user_id', userId),
+    ])
+    setRdvs(r ?? [])
+    setAvisDonnes(new Set((av ?? []).map((a) => a.appointment_id)))
+  }
+
+  async function annuler(id) {
+    if (!window.confirm(t('c_annuler_confirm'))) return
+    setRdvErr(null)
+    const { error: err } = await supabase.rpc('cancel_my_appointment', { p_appointment_id: id })
+    if (err) {
+      setRdvErr(t('err_annulation', { h: DELAI_ANNULATION_H }))
+      return
+    }
+    chargerRdvs(session.user.id)
+  }
+
+  async function supprimerCompte() {
+    if (!window.confirm(t('c_supprimer_confirm'))) return
+    setBusy(true)
+    setError(null)
+    // Photos du salon : dossier = id du compte dans le bucket
+    const dossier = session.user.id
+    const { data: fichiers } = await supabase.storage.from('salon-photos').list(dossier)
+    if (fichiers?.length) {
+      await supabase.storage
+        .from('salon-photos')
+        .remove(fichiers.map((f) => `${dossier}/${f.name}`))
+    }
+    const { error: err } = await supabase.rpc('delete_my_account')
+    setBusy(false)
+    if (err) {
+      setError(t('err_generique') + ' ' + err.message)
+      return
+    }
+    await supabase.auth.signOut()
+    nav('/')
+  }
 
   async function connexion(e) {
     e.preventDefault()
@@ -84,6 +206,7 @@ export default function Compte() {
       return
     }
     setProfil(prof)
+    invaliderSession() // met à jour le prénom dans l’en-tête
   }
 
   async function completerProfil(e) {
@@ -101,6 +224,7 @@ export default function Compte() {
       return
     }
     setProfil(data)
+    invaliderSession() // met à jour le prénom dans l’en-tête
   }
 
   async function deconnexion() {
@@ -121,6 +245,7 @@ export default function Compte() {
 
   // ----- Connecté -----
   if (session?.user) {
+    const maintenant = new Date()
     return (
       <>
         <SiteHeader />
@@ -128,7 +253,7 @@ export default function Compte() {
           <div className="carte-auth">
             {profil ? (
               <>
-                <h1>{t('c_bonjour')} {profil.name.split(' ')[0]} 👋</h1>
+                <h1>{t('c_bonjour')} {profil.name.split(' ')[0]}</h1>
                 <div className="recap">
                   <div className="ligne-recap">
                     <span>{t('c_nom')}</span>
@@ -181,6 +306,88 @@ export default function Compte() {
               </>
             )}
           </div>
+
+          {/* ----- Mes rendez-vous ----- */}
+          <h2 className="etape" style={{ marginTop: 28 }}>{t('c_mes_rdv')}</h2>
+          {rdvErr && <p className="erreur">{rdvErr}</p>}
+          {rdvs.length === 0 && <div className="vide">{t('c_aucun_rdv')}</div>}
+          {[
+            { titre: t('c_a_venir'), items: rdvs.filter((r) => new Date(r.starts_at) > maintenant).reverse() },
+            { titre: t('c_passes'), items: rdvs.filter((r) => new Date(r.starts_at) <= maintenant) },
+          ].map((g) => g.items.length > 0 && (
+            <div key={g.titre}>
+              <h3 className="entete-groupe">{g.titre}</h3>
+              {g.items.map((r) => {
+                const aVenir = new Date(r.starts_at) > maintenant
+                const annulable =
+                  aVenir && r.status === 'confirmed' &&
+                  new Date(r.starts_at).getTime() - Date.now() > DELAI_ANNULATION_H * 3600000
+                const peutNoter =
+                  !aVenir && ['confirmed', 'done'].includes(r.status) && !avisDonnes.has(r.id)
+                return (
+                  <div key={r.id} className={`carte rdv ${r.status === 'cancelled' ? 'annule' : ''}`}>
+                    <div className="heure">
+                      {formatTime(r.starts_at)}
+                      <span className="quand">
+                        {dateLocale(r.starts_at, locale, { day: 'numeric', month: 'short' })}
+                      </span>
+                    </div>
+                    <div className="detail">
+                      <div className="nom">
+                        {r.salons ? <Link to={`/s/${r.salons.slug}`}>{r.salons.name}</Link> : '—'}
+                      </div>
+                      <div className="meta">
+                        {r.services?.name}
+                        {r.services?.price_bif != null && ` · ${formatBif(r.services.price_bif, t('sur_devis'))}`}
+                      </div>
+                      <div style={{ marginTop: 6 }}>
+                        <span className={`badge ${r.status}`}>{t(CLES_STATUT[r.status] ?? 'st_passe')}</span>
+                      </div>
+                      <div className="actions-relance">
+                        {aVenir && r.salons?.phone && (
+                          <a className="btn-relance" href={`tel:+${telInternational(r.salons.phone)}`}>
+                            {t('b_appeler')}
+                          </a>
+                        )}
+                        {annulable && (
+                          <button className="btn-relance" onClick={() => annuler(r.id)}>
+                            {t('c_annuler')}
+                          </button>
+                        )}
+                        {peutNoter && avisOuvert !== r.id && (
+                          <button className="btn-relance" onClick={() => setAvisOuvert(r.id)}>
+                            {t('c_laisser_avis')}
+                          </button>
+                        )}
+                        {avisDonnes.has(r.id) && (
+                          <span className="aide-champ">{t('c_avis_donne')}</span>
+                        )}
+                      </div>
+                      {avisOuvert === r.id && (
+                        <FormAvis
+                          rdvId={r.id}
+                          onEnvoye={() => {
+                            setAvisOuvert(null)
+                            setAvisDonnes((s) => new Set(s).add(r.id))
+                          }}
+                        />
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          ))}
+
+          {/* ----- Suppression du compte ----- */}
+          <details className="zone-danger">
+            <summary>{t('c_zone_danger')}</summary>
+            <p className="aide-champ">{t('c_supprimer_texte')}</p>
+            {error && <p className="erreur">{error}</p>}
+            <button className="btn-danger" disabled={busy} onClick={supprimerCompte}>
+              {t('c_supprimer')}
+            </button>
+          </details>
         </div>
       </>
     )
@@ -224,6 +431,9 @@ export default function Compte() {
                   {busy ? t('b_instant') : t('b_connecter')}
                 </button>
               </div>
+              <p className="aide-champ" style={{ textAlign: 'center' }}>
+                <Link to="/mot-de-passe">{t('mdp_oublie')}</Link>
+              </p>
             </form>
           ) : (
             <form onSubmit={inscription}>

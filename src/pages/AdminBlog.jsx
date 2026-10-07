@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { supabase, blogPhotoUrl, slugify } from '../lib/supabase'
 import { CATEGORIES_BLOG } from '../lib/categories.js'
 import SiteHeader from '../components/SiteHeader.jsx'
+import { useMeta } from '../lib/useMeta.js'
 
 const VIDE = {
   id: null,
@@ -20,6 +21,7 @@ const VIDE = {
 
 export default function AdminBlog() {
   const nav = useNavigate()
+  useMeta({ titre: 'Admin — Blog', noindex: true })
   const [statut, setStatut] = useState('verification') // verification | refuse | pret
   const [articles, setArticles] = useState([])
   const [loading, setLoading] = useState(true)

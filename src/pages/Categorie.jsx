@@ -4,6 +4,7 @@ import SiteHeader from '../components/SiteHeader.jsx'
 import SiteFooter from '../components/SiteFooter.jsx'
 import { categorieParSlug, VILLES_BURUNDI } from '../lib/categories.js'
 import { useLang } from '../lib/i18n.jsx'
+import { useMeta } from '../lib/useMeta.js'
 
 const NB_VILLES_INITIAL = 3
 
@@ -16,6 +17,11 @@ export default function Categorie() {
   const [q, setQ] = useState('')
   const [ou, setOu] = useState('')
   const [toutesVilles, setToutesVilles] = useState(false)
+
+  useMeta({
+    titre: cat ? (lang === 'en' && cat.nom_en ? cat.nom_en : cat.nom) : t('cat_introuvable'),
+    noindex: !cat,
+  })
 
   if (!cat) {
     return (

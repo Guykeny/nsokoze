@@ -2,6 +2,10 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase, computeSlots, formatBif, formatTime, photoUrl } from '../lib/supabase'
 import { useLang } from '../lib/i18n.jsx'
+import { useMeta } from '../lib/useMeta.js'
+import {
+  jourBuj, jourBujOffset, instantBuj, jourSemaine, heureBuj, dateLocale, dateDuJour,
+} from '../lib/temps.js'
 import SiteHeader from '../components/SiteHeader.jsx'
 import { CarteSalons } from '../components/Carte.jsx'
 
@@ -31,21 +35,18 @@ const MOTS_GENERIQUES = new Set([
 ])
 
 function dateStr(offset = 0) {
-  const d = new Date()
-  d.setDate(d.getDate() + offset)
-  return d.toISOString().slice(0, 10)
+  return jourBujOffset(offset)
 }
 
 export default function Recherche() {
   const nav = useNavigate()
   const { t, locale } = useLang()
+  useMeta({ titre: t('pied_lien_recherche') })
 
   function labelJour(offset) {
     if (offset === 0) return t('r_auj')
     if (offset === 1) return t('r_demain')
-    const d = new Date()
-    d.setDate(d.getDate() + offset)
-    return d.toLocaleDateString(locale, { weekday: 'short', day: 'numeric' })
+    return dateDuJour(dateStr(offset), locale, { weekday: 'short', day: 'numeric' })
   }
   const [params, setParams] = useSearchParams()
   const [salons, setSalons] = useState([])
@@ -61,8 +62,8 @@ export default function Recherche() {
   const genre = params.get('genre') // 'femme' | 'homme' | null
 
   useEffect(() => {
-    const debut = new Date(`${dateStr(0)}T00:00`).toISOString()
-    const fin = new Date(`${dateStr(HORIZON_JOURS)}T23:59:59`).toISOString()
+    const debut = instantBuj(dateStr(0), '00:00').toISOString()
+    const fin = instantBuj(dateStr(HORIZON_JOURS), '23:59:59').toISOString()
     Promise.all([
       supabase.from('salons').select('*').order('created_at'),
       supabase.from('services').select('salon_id, name, duration_min, price_bif').eq('is_active', true),
@@ -123,11 +124,9 @@ export default function Recherche() {
       const jours = []
       for (let offset = 0; offset <= HORIZON_JOURS; offset++) {
         const d = dateStr(offset)
-        const weekday = new Date(`${d}T12:00`).getDay()
+        const weekday = jourSemaine(d)
         const hsJour = mesHeures.filter((h) => h.weekday === weekday)
-        const occJour = mesOccupes.filter((o) =>
-          new Date(o.starts_at).toISOString().slice(0, 10) === d
-        )
+        const occJour = mesOccupes.filter((o) => jourBuj(o.starts_at) === d)
         const slots = hsJour.length
           ? computeSlots(hsJour, occJour, d, dureeMin)
           : []
@@ -137,8 +136,8 @@ export default function Recherche() {
             date: d,
             offset,
             ouvert: hsJour.length > 0,
-            matin: slots.some((t) => t.getHours() < 12),
-            apresMidi: slots.some((t) => t.getHours() >= 12),
+            matin: slots.some((t) => heureBuj(t) < 12),
+            apresMidi: slots.some((t) => heureBuj(t) >= 12),
           })
         }
       }
@@ -278,7 +277,7 @@ export default function Recherche() {
                         <>
                           {t('r_prochain')}{' '}
                           <strong>
-                            {dispo.prochain.toLocaleDateString(locale, {
+                            {dateLocale(dispo.prochain, locale, {
                               weekday: 'long', day: 'numeric', month: 'long',
                             })}{' '}
                             {t('b_a')} {formatTime(dispo.prochain)}

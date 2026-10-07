@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom'
 import { supabase, blogPhotoUrl, dureeLecture } from '../lib/supabase'
 import { libelleCategorieBlog } from '../lib/categories.js'
 import { useLang } from '../lib/i18n.jsx'
+import { useMeta } from '../lib/useMeta.js'
 import SiteHeader from '../components/SiteHeader.jsx'
 import SiteFooter from '../components/SiteFooter.jsx'
 
@@ -20,6 +21,14 @@ export default function Article() {
       .maybeSingle()
       .then(({ data }) => setArticle(data ?? null))
   }, [slug])
+
+  const enAnglais = lang === 'en' && article?.titre_en
+  useMeta({
+    titre: article ? (enAnglais ? article.titre_en : article.titre) : undefined,
+    description: article ? (enAnglais ? article.extrait_en : article.extrait) || undefined : undefined,
+    image: article?.image ? blogPhotoUrl(article.image) : undefined,
+    noindex: article === null,
+  })
 
   if (article === undefined) {
     return (

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useLang } from '../lib/i18n.jsx'
+import { useMeta } from '../lib/useMeta.js'
 import SiteHeader from '../components/SiteHeader.jsx'
 
 const IMAGE_COTE =
@@ -29,6 +30,7 @@ function Fleche() {
 export default function Login() {
   const nav = useNavigate()
   const { t } = useLang()
+  useMeta({ titre: t('pied_lien_pro') })
   // choix | activite | lieu | compte | connexion
   const [vue, setVue] = useState('choix')
 
@@ -237,6 +239,9 @@ export default function Login() {
                       {busy ? t('b_instant') : t('b_connecter')}
                     </button>
                   </div>
+                  <p className="aide-champ" style={{ textAlign: 'center' }}>
+                    <Link to="/mot-de-passe">{t('mdp_oublie')}</Link>
+                  </p>
                 </form>
                 <div className="separateur">{t('l_ou')}</div>
                 <button className="btn-secondaire" onClick={() => setVue('choix')}>

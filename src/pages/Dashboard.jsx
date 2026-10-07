@@ -1,32 +1,27 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { supabase, formatTime, formatBif } from '../lib/supabase'
+import { supabase, formatTime, formatBif, slugify, telInternational } from '../lib/supabase'
 import { useLang } from '../lib/i18n.jsx'
+import { useMeta } from '../lib/useMeta.js'
+import { jourBuj, jourBujOffset, instantBuj, hhmmBuj, dateLocale } from '../lib/temps.js'
+import { invaliderSession } from '../lib/useSession.js'
 import SiteHeader from '../components/SiteHeader.jsx'
 import ProShell from '../components/ProShell.jsx'
 
-const ACCENTS = new RegExp('[\\u0300-\\u036f]', 'g')
-
-function slugify(name) {
-  return name
-    .toLowerCase()
-    .normalize('NFD').replace(ACCENTS, '')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/(^-|-$)/g, '')
-}
-
+// Jour à Bujumbura (l'agenda suit l'heure du salon, pas celle du navigateur)
 function dayStr(d) {
-  return d.toISOString().slice(0, 10)
+  return jourBuj(d)
 }
 
 function heureStr(iso) {
-  const d = new Date(iso)
-  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
+  return hhmmBuj(iso)
 }
 
 function dateLongue(d, locale) {
-  return d.toLocaleDateString(locale, { weekday: 'long', day: 'numeric', month: 'long' })
+  return dateLocale(d, locale, { weekday: 'long', day: 'numeric', month: 'long' })
 }
+
+const NOTIF_DISPO = typeof window !== 'undefined' && 'Notification' in window
 
 /** « hier », « il y a 5 jours », « il y a 3 semaines »… */
 function depuis(iso, t) {
@@ -72,6 +67,14 @@ export default function Dashboard() {
   const [mTime, setMTime] = useState('09:00')
   const [error, setError] = useState(null)
   const [copie, setCopie] = useState(false)
+  const [alerte, setAlerte] = useState(null) // bandeau « nouveau RDV »
+  const [notifOk, setNotifOk] = useState(NOTIF_DISPO && Notification.permission === 'granted')
+
+  useMeta({ titre: t('p_agenda'), noindex: true })
+
+  // Les rechargements déclenchés par le temps réel doivent voir le jour courant
+  const rechargerRef = useRef(() => {})
+  rechargerRef.current = () => { loadDay(); loadListes() }
 
   useEffect(() => {
     supabase.auth.getUser().then(async ({ data: { user } }) => {
@@ -109,14 +112,47 @@ export default function Dashboard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [salon])
 
+  // Temps réel : nouvelle réservation ou annulation par une cliente
+  // (nécessite la migration 011 : table appointments dans supabase_realtime)
+  useEffect(() => {
+    if (!salon) return
+    const canal = supabase
+      .channel(`agenda-${salon.id}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'appointments', filter: `salon_id=eq.${salon.id}` },
+        (payload) => {
+          rechargerRef.current()
+          const rdv = payload.new
+          if (payload.eventType === 'INSERT' && rdv?.source === 'online') {
+            const quand = `${dateLongue(rdv.starts_at, locale)} · ${formatTime(rdv.starts_at)}`
+            const texte = t('d_nouveau_rdv', { quand })
+            setAlerte(texte)
+            if (NOTIF_DISPO && Notification.permission === 'granted' && document.hidden) {
+              new Notification('Nsokoze', { body: texte, icon: '/icon-192.png' })
+            }
+          }
+        }
+      )
+      .subscribe()
+    return () => { supabase.removeChannel(canal) }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [salon])
+
+  async function activerNotifications() {
+    if (!NOTIF_DISPO) return
+    const p = await Notification.requestPermission()
+    setNotifOk(p === 'granted')
+  }
+
   async function loadDay() {
     const d = dayStr(day)
     const { data } = await supabase
       .from('appointments')
       .select(CHAMPS_RDV)
       .eq('salon_id', salon.id)
-      .gte('starts_at', new Date(`${d}T00:00`).toISOString())
-      .lte('starts_at', new Date(`${d}T23:59:59`).toISOString())
+      .gte('starts_at', instantBuj(d, '00:00').toISOString())
+      .lte('starts_at', instantBuj(d, '23:59:59').toISOString())
       .order('starts_at')
     setAppts(data ?? [])
   }
@@ -183,6 +219,7 @@ export default function Dashboard() {
       return
     }
     setSalon(data)
+    invaliderSession() // met à jour le prénom dans l’en-tête
   }
 
   async function addManual(e) {
@@ -190,9 +227,10 @@ export default function Dashboard() {
     setError(null)
     const svc = services.find((s) => s.id === mService)
     if (!svc) return
-    const starts = new Date(`${mDate}T${mTime}`)
-    // Réutilise la RPC : mêmes vérifications de conflit, puis marque la source
-    const { data, error: err } = await supabase.rpc('book_appointment', {
+    const starts = instantBuj(mDate, mTime)
+    // Même RPC que les clientes : mêmes vérifications de conflit. Appelée par
+    // le gérant, elle enregistre le RDV comme « manuel » (migration 011).
+    const { error: err } = await supabase.rpc('book_appointment', {
       p_salon_id: salon.id,
       p_service_id: svc.id,
       p_starts_at: starts.toISOString(),
@@ -211,10 +249,6 @@ export default function Dashboard() {
       )
       return
     }
-    await supabase
-      .from('appointments')
-      .update({ source: 'manual' })
-      .eq('id', data.appointment_id)
     setShowAdd(false)
     setMName(''); setMPhone('')
     loadDay()
@@ -251,9 +285,7 @@ export default function Dashboard() {
     setMName(a.clients?.name ?? '')
     setMPhone(a.clients?.phone ?? '')
     setMService(services.some((s) => s.id === a.service_id) ? a.service_id : '')
-    const demain = new Date()
-    demain.setDate(demain.getDate() + 1)
-    setMDate(dayStr(demain))
+    setMDate(jourBujOffset(1))
     setMTime(heureStr(a.starts_at))
     setShowAdd(true)
   }
@@ -327,8 +359,7 @@ export default function Dashboard() {
 
   /** Message WhatsApp de relance : même prestation, même prix. */
   function lienRelance(a) {
-    let tel = (a.clients?.phone ?? '').replace(/\D/g, '')
-    if (tel.length === 8) tel = '257' + tel
+    const tel = telInternational(a.clients?.phone)
     const prix = a.services?.price_bif != null ? formatBif(a.services.price_bif, t('sur_devis')) : null
     const texte = t('d_wa_relance', {
       nom: a.clients?.name ?? '',
@@ -341,14 +372,33 @@ export default function Dashboard() {
     return `https://wa.me/${tel}?text=${encodeURIComponent(texte)}`
   }
 
+  /** Rappel WhatsApp pour un RDV d'aujourd'hui ou de demain (null sinon). */
+  function lienRappel(a) {
+    const jour = dayStr(new Date(a.starts_at))
+    const quand =
+      jour === aujourdhuiStr ? t('d_aujourdhui')
+        : jour === jourBujOffset(1) ? t('d_demain')
+          : null
+    if (!quand || !a.clients?.phone || new Date(a.starts_at) <= new Date()) return null
+    const texte = t('d_wa_rappel', {
+      nom: a.clients.name ?? '',
+      salon: salon.name,
+      quand,
+      heure: formatTime(a.starts_at),
+      service: a.services?.name ?? '',
+    })
+    return `https://wa.me/${telInternational(a.clients.phone)}?text=${encodeURIComponent(texte)}`
+  }
+
   function CarteRdv({ a, avecDate }) {
+    const rappel = a.status === 'confirmed' ? lienRappel(a) : null
     return (
       <div className={`carte rdv ${a.status !== 'confirmed' ? 'annule' : ''}`}>
         <div className="heure">
           {formatTime(a.starts_at)}
           {avecDate && (
             <span className="quand">
-              {new Date(a.starts_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+              {dateLocale(a.starts_at, locale, { day: 'numeric', month: 'short' })}
             </span>
           )}
         </div>
@@ -365,6 +415,13 @@ export default function Dashboard() {
               <span className={`badge ${a.status}`}>{t(CLES_STATUT[a.status])}</span>
             )}
           </div>
+          {rappel && (
+            <div className="actions-relance">
+              <a className="btn-relance whatsapp" href={rappel} target="_blank" rel="noreferrer">
+                {t('d_rappel')}
+              </a>
+            </div>
+          )}
         </div>
         {a.status === 'confirmed' && (
           <div className="actions">
@@ -379,6 +436,17 @@ export default function Dashboard() {
 
   return (
     <ProShell salon={salon}>
+      {alerte && (
+        <div className="alerte-rdv" role="status">
+          <span>{alerte}</span>
+          <button className="btn-fermer" aria-label={t('d_fermer')} onClick={() => setAlerte(null)}>✕</button>
+        </div>
+      )}
+      {NOTIF_DISPO && !notifOk && (
+        <p className="aide-champ" style={{ textAlign: 'right', margin: '0 0 8px' }}>
+          <button className="btn-lien" onClick={activerNotifications}>{t('d_notif_activer')}</button>
+        </p>
+      )}
       <div className="lien-partage">
         <p className="titre-partage">{t('d_lien_titre')}</p>
         <a className="url" href={shareUrl}>{shareUrl}</a>
@@ -491,7 +559,7 @@ export default function Dashboard() {
               <h3 className="entete-groupe">
                 {g.date === aujourdhuiStr
                   ? t('r_auj')
-                  : dateLongue(new Date(`${g.date}T12:00`), locale)}
+                  : dateLongue(instantBuj(g.date, '12:00'), locale)}
               </h3>
               {g.items.map((a) => <CarteRdv key={a.id} a={a} />)}
             </div>
@@ -519,9 +587,7 @@ export default function Dashboard() {
                   {a.services?.name}
                   {a.services?.price_bif != null && ` · ${formatBif(a.services.price_bif, t('sur_devis'))}`}
                   {' · '}
-                  {new Date(a.starts_at).toLocaleDateString(locale, {
-                    day: 'numeric', month: 'long',
-                  })}
+                  {dateLocale(a.starts_at, locale, { day: 'numeric', month: 'long' })}
                 </div>
                 <div style={{ marginTop: 6, display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                   {CLES_STATUT[a.status] ? (

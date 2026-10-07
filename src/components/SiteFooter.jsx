@@ -39,6 +39,15 @@ export default function SiteFooter() {
           <Link to="/pro">{t('pied_lien_pro')}</Link>
           <Link to="/compte">{t('header_compte')}</Link>
         </div>
+
+        <div className="pied-colonne">
+          <h3>{t('pied_col_aide')}</h3>
+          <Link to="/a-propos">{t('pied_apropos')}</Link>
+          <Link to="/a-propos#contact">{t('pied_contact')}</Link>
+          <Link to="/legal/mentions-legales">{t('pied_mentions')}</Link>
+          <Link to="/legal/cgu">{t('pied_cgu')}</Link>
+          <Link to="/legal/confidentialite">{t('pied_confidentialite')}</Link>
+        </div>
       </div>
 
       <div className="pied-riche-bas">

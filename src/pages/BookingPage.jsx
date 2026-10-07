@@ -1,8 +1,16 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { useParams, useSearchParams } from 'react-router-dom'
-import { supabase, computeSlots, formatBif, formatTime, photoUrl } from '../lib/supabase'
+import { Link, useParams, useSearchParams } from 'react-router-dom'
+import {
+  supabase, computeSlots, formatBif, formatTime, photoUrl, telInternational,
+} from '../lib/supabase'
 import { useLang } from '../lib/i18n.jsx'
+import { useMeta } from '../lib/useMeta.js'
+import {
+  jourBuj, jourBujOffset, instantBuj, jourSemaine, dateLocale, dateDuJour, ajouterJours,
+} from '../lib/temps.js'
+import { invaliderSession } from '../lib/useSession.js'
 import SiteHeader from '../components/SiteHeader.jsx'
+import { CarteSalons } from '../components/Carte.jsx'
 
 // code d'erreur RPC → clé de traduction
 const CODES_ERREUR = {
@@ -12,14 +20,30 @@ const CODES_ERREUR = {
   nom_invalide: 'err_nom',
   telephone_invalide: 'err_tel',
   service_introuvable: 'err_service',
+  trop_de_rdv: 'err_trop_de_rdv',
+  profil_incomplet: 'err_profil_incomplet',
+  connexion_requise: 'err_connexion_requise',
 }
 
 const HORIZON = 14 // jours proposés à la réservation
 
+// Lundi → dimanche, ordre d'affichage des horaires
+const ORDRE_JOURS = [1, 2, 3, 4, 5, 6, 0]
+// Un dimanche quelconque : + n jours = nom du jour n dans la langue choisie
+const DIMANCHE_REF = '2024-01-07'
+
 function todayStr(offset = 0) {
-  const d = new Date()
-  d.setDate(d.getDate() + offset)
-  return d.toISOString().slice(0, 10)
+  return jourBujOffset(offset)
+}
+
+function Etoiles({ note }) {
+  const pleine = Math.round(note)
+  return (
+    <span className="etoiles" aria-label={`${note}/5`}>
+      {'★★★★★'.slice(0, pleine)}
+      <span className="etoiles-vides">{'★★★★★'.slice(pleine)}</span>
+    </span>
+  )
 }
 
 function initiales(name) {
@@ -32,13 +56,11 @@ function initiales(name) {
 }
 
 function formatDateLongue(d, locale) {
-  return new Date(d).toLocaleDateString(locale, {
-    weekday: 'long', day: 'numeric', month: 'long',
-  })
+  return dateLocale(d, locale, { weekday: 'long', day: 'numeric', month: 'long' })
 }
 
 function formatDateCourte(d, locale) {
-  return new Date(d).toLocaleDateString(locale, { weekday: 'short', day: 'numeric', month: 'short' })
+  return dateLocale(d, locale, { weekday: 'short', day: 'numeric', month: 'short' })
 }
 
 export default function BookingPage() {
@@ -51,6 +73,8 @@ export default function BookingPage() {
   const [occupied, setOccupied] = useState([]) // créneaux pris sur l'horizon
   const [pret, setPret] = useState(false)      // horaires + occupations chargés
   const [notFound, setNotFound] = useState(false)
+  const [avis, setAvis] = useState([])
+  const [noteSalon, setNoteSalon] = useState(null) // { moyenne, nb }
 
   const [serviceId, setServiceId] = useState(null)
   // Date pré-sélectionnée depuis la recherche (?date=YYYY-MM-DD), si valide
@@ -110,8 +134,34 @@ export default function BookingPage() {
         setServices(svc ?? [])
         // Un seul service ? On le sélectionne d'office : une étape de moins.
         if (svc?.length === 1) setServiceId(svc[0].id)
+
+        // Avis (vues publiques de la migration 011 ; absentes avant = ignoré)
+        const [{ data: av }, { data: note }] = await Promise.all([
+          supabase
+            .from('avis_publics')
+            .select('id, auteur, note, commentaire, created_at')
+            .eq('salon_id', data.id)
+            .order('created_at', { ascending: false })
+            .limit(10),
+          supabase
+            .from('salon_notes')
+            .select('moyenne, nb')
+            .eq('salon_id', data.id)
+            .maybeSingle(),
+        ])
+        setAvis(av ?? [])
+        setNoteSalon(note ?? null)
       })
   }, [slug])
+
+  useMeta({
+    titre: salon?.name,
+    description: salon
+      ? [salon.description, [salon.quartier, salon.ville].filter(Boolean).join(', ')]
+          .filter(Boolean).join(' — ') || undefined
+      : undefined,
+    image: salon?.photos?.length ? photoUrl(salon.photos[0]) : undefined,
+  })
 
   // Suit la session du compte client
   useEffect(() => {
@@ -138,8 +188,8 @@ export default function BookingPage() {
   // Ensuite, changer de date est instantané (calcul local).
   useEffect(() => {
     if (!salon) return
-    const debut = new Date(`${todayStr(0)}T00:00`).toISOString()
-    const fin = new Date(`${todayStr(HORIZON - 1)}T23:59:59`).toISOString()
+    const debut = instantBuj(todayStr(0), '00:00').toISOString()
+    const fin = instantBuj(todayStr(HORIZON - 1), '23:59:59').toISOString()
     Promise.all([
       supabase
         .from('opening_hours')
@@ -164,12 +214,10 @@ export default function BookingPage() {
   )
 
   function slotsPour(dateStr) {
-    const weekday = new Date(`${dateStr}T12:00`).getDay()
+    const weekday = jourSemaine(dateStr)
     const hsJour = hours.filter((h) => h.weekday === weekday)
     if (hsJour.length === 0) return []
-    const occJour = occupied.filter(
-      (o) => new Date(o.starts_at).toISOString().slice(0, 10) === dateStr
-    )
+    const occJour = occupied.filter((o) => jourBuj(o.starts_at) === dateStr)
     return computeSlots(hsJour, occJour, dateStr, service?.duration_min ?? 60)
   }
 
@@ -205,7 +253,7 @@ export default function BookingPage() {
     if (slot) {
       setTimeout(() => refForm.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 60)
     }
-  }, [slot]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [slot])
 
   function auPlusTot() {
     if (!premier) return
@@ -255,6 +303,7 @@ export default function BookingPage() {
       return
     }
     setProfil(prof)
+    invaliderSession() // met à jour le prénom dans l’en-tête
   }
 
   async function enregistrerProfil(e) {
@@ -276,6 +325,7 @@ export default function BookingPage() {
       return
     }
     setProfil(data)
+    invaliderSession() // met à jour le prénom dans l’en-tête
   }
 
   async function changerCompte() {
@@ -372,6 +422,9 @@ export default function BookingPage() {
             </div>
             <p className="note">{t('b_empechement', { tel: salon.phone })}</p>
           </div>
+          <Link to="/compte" className="btn" style={{ display: 'block', textAlign: 'center', textDecoration: 'none', marginBottom: 10 }}>
+            {t('b_voir_mes_rdv')}
+          </Link>
           <button
             className="btn-secondaire"
             onClick={() => { setDone(null); setSlot(null) }}
@@ -397,7 +450,39 @@ export default function BookingPage() {
               {[salon.adresse ?? salon.quartier, salon.ville].filter(Boolean).join(', ')}
               {salon.description ? ` — ${salon.description}` : ''}
             </p>
+            {noteSalon && (
+              <p className="note-salon">
+                <Etoiles note={noteSalon.moyenne} /> {noteSalon.moyenne}
+                <span> · {t('b_nb_avis', { n: noteSalon.nb })}</span>
+              </p>
+            )}
           </div>
+        </div>
+
+        <div className="actions-salon">
+          <a className="btn btn-pilule btn-secondaire" href={`tel:+${telInternational(salon.phone)}`}>
+            {t('b_appeler')}
+          </a>
+          <a
+            className="btn btn-pilule btn-whatsapp"
+            href={`https://wa.me/${telInternational(salon.phone)}`}
+            target="_blank"
+            rel="noreferrer"
+          >
+            {t('b_whatsapp')}
+          </a>
+          {salon.lat != null && salon.lng != null && (
+            <a
+              className="btn btn-pilule btn-secondaire"
+              // Simple lien « Maps URLs » de Google : gratuit, sans clé d'API.
+              // Sur mobile, il ouvre directement l'application Google Maps.
+              href={`https://www.google.com/maps/dir/?api=1&destination=${salon.lat}%2C${salon.lng}`}
+              target="_blank"
+              rel="noreferrer"
+            >
+              {t('b_itineraire')}
+            </a>
+          )}
         </div>
 
         {salon.photos?.length > 0 && (
@@ -457,8 +542,7 @@ export default function BookingPage() {
 
             <div className="chips-dates">
               {jours.map((d, i) => {
-                const dt = new Date(`${d}T12:00`)
-                const ferme = pret && !joursOuverts.has(dt.getDay())
+                const ferme = pret && !joursOuverts.has(jourSemaine(d))
                 return (
                   <button
                     key={d}
@@ -470,11 +554,11 @@ export default function BookingPage() {
                     <span className="cj">
                       {i === 0
                         ? t('b_auj')
-                        : dt.toLocaleDateString(locale, { weekday: 'short' })}
+                        : dateDuJour(d, locale, { weekday: 'short' })}
                     </span>
-                    <span className="cn">{dt.getDate()}</span>
+                    <span className="cn">{Number(d.slice(8, 10))}</span>
                     <span className="cj">
-                      {dt.toLocaleDateString(locale, { month: 'short' })}
+                      {dateDuJour(d, locale, { month: 'short' })}
                     </span>
                   </button>
                 )
@@ -561,6 +645,9 @@ export default function BookingPage() {
                         {authBusy ? t('b_instant') : t('b_connecter')}
                       </button>
                     </div>
+                    <p className="aide-champ" style={{ textAlign: 'center' }}>
+                      <Link to="/mot-de-passe">{t('mdp_oublie')}</Link>
+                    </p>
                   </form>
                 )}
               </div>
@@ -620,6 +707,51 @@ export default function BookingPage() {
             )}
           </div>
         )}
+
+        {/* ----- Infos pratiques : horaires, carte, avis ----- */}
+        {pret && hours.length > 0 && (
+          <section className="bloc-infos">
+            <h2 className="etape">{t('b_horaires')}</h2>
+            <div className="recap horaires-salon">
+              {ORDRE_JOURS.map((wd) => {
+                const plages = hours
+                  .filter((h) => h.weekday === wd)
+                  .sort((a, b) => a.opens_at.localeCompare(b.opens_at))
+                return (
+                  <div key={wd} className="ligne-recap">
+                    <span>{dateDuJour(ajouterJours(DIMANCHE_REF, wd), locale, { weekday: 'long' })}</span>
+                    <span>
+                      {plages.length === 0
+                        ? t('b_ferme')
+                        : plages.map((p) => `${p.opens_at.slice(0, 5)}–${p.closes_at.slice(0, 5)}`).join(', ')}
+                    </span>
+                  </div>
+                )
+              })}
+            </div>
+          </section>
+        )}
+
+        {salon.lat != null && salon.lng != null && (
+          <section className="bloc-infos">
+            <CarteSalons salons={[salon]} />
+          </section>
+        )}
+
+        <section className="bloc-infos">
+          <h2 className="etape">{t('b_avis')}</h2>
+          {avis.length === 0 && <div className="vide">{t('b_aucun_avis')}</div>}
+          {avis.map((a) => (
+            <div key={a.id} className="carte avis">
+              <div className="avis-entete">
+                <strong>{a.auteur}</strong>
+                <Etoiles note={a.note} />
+                <span className="avis-date">{formatDateCourte(a.created_at, locale)}</span>
+              </div>
+              {a.commentaire && <p>{a.commentaire}</p>}
+            </div>
+          ))}
+        </section>
       </div>
 
       {/* Barre fixe : le récapitulatif et la confirmation suivent la cliente */}

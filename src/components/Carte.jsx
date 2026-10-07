@@ -8,6 +8,13 @@ export const CENTRE_BUJUMBURA = [-3.3822, 29.3644]
 const TUILES = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
 const ATTRIBUTION = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
 
+// Les noms et quartiers sont saisis par les salons : jamais injectés bruts en HTML
+function echapper(texte) {
+  return String(texte ?? '').replace(/[&<>"']/g, (c) => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+  })[c])
+}
+
 function marqueurNoir() {
   return L.divIcon({
     className: '',
@@ -52,9 +59,9 @@ export function CarteSalons({ salons }) {
       const m = L.marker([s.lat, s.lng], { icon: marqueurNoir() }).addTo(calque)
       m.bindPopup(
         `<div class="popup-salon">
-           <strong>${s.name}</strong><br/>
-           <span>${[s.quartier, s.ville].filter(Boolean).join(', ')}</span><br/>
-           <a href="/s/${s.slug}">Prendre RDV</a>
+           <strong>${echapper(s.name)}</strong><br/>
+           <span>${echapper([s.quartier, s.ville].filter(Boolean).join(', '))}</span><br/>
+           <a href="/s/${encodeURIComponent(s.slug)}">Prendre RDV</a>
          </div>`
       )
     })
